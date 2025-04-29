@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Authentication</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
+    <style>
+        /* Base Reset */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #f7f7f7;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 1rem;
+        }
+
+        /* Auth Container */
+        .auth-container {
+            background: #fff;
+            border-radius: 1.5rem;
+            box-shadow: 0 25px 50px -12px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 400px;
+            overflow: hidden;
+        }
+
+        /* Header Section */
+        .auth-header {
+            background: #7c3aed;
+            padding: 2rem;
+            text-align: center;
+        }
+
+        .auth-header h1 {
+            color: white;
+            font-weight: 600;
+            font-size: 1.5rem;
+        }
+
+        /* Form Container */
+        .auth-content {
+            padding: 2rem;
+        }
+
+        /* Tab Buttons */
+        .tab-buttons {
+            display: flex;
+            background: #f3e8ff;
+            padding: 0.5rem;
+            border-radius: 0.75rem;
+            margin-bottom: 2rem;
+        }
+
+        .tab-btn {
+            flex: 1;
+            padding: 0.75rem;
+            border: none;
+            border-radius: 0.5rem;
+            background: transparent;
+            font-weight: 500;
+            color: #7c3aed;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .tab-btn.active {
+            background: #7c3aed;
+            color: white;
+        }
+
+        /* Form Elements */
+        .auth-form {
+            display: none;
+        }
+
+        .auth-form.active {
+            display: block;
+        }
+
+        .input-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: #475569;
+            font-size: 0.875rem;
+        }
+
+        .input-group input {
+            width: 100%;
+            padding: 0.875rem;
+            border: 1px solid #e2e8f0;
+            border-radius: 0.75rem;
+            font-size: 0.9375rem;
+            transition: all 0.3s;
+        }
+
+        .input-group input:focus {
+            outline: none;
+            border-color: #7c3aed;
+            box-shadow: 0 0 0 3px rgba(124,58,237,0.1);
+        }
+
+        /* Button Styles */
+        .primary-btn {
+            width: 100%;
+            padding: 0.875rem;
+            background: #7c3aed;
+            color: white;
+            border: none;
+            border-radius: 0.75rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .primary-btn:hover {
+            background: #6d28d9;
+            transform: translateY(-1px);
+        }
+
+        .primary-btn:active {
+            transform: translateY(0);
+        }
+
+        /* Message Display */
+        .message {
+            margin-top: 1.5rem;
+            padding: 0.875rem;
+            border-radius: 0.75rem;
+            font-size: 0.875rem;
+            text-align: center;
+        }
+
+        .message.error {
+            background: #fee2e2;
+            color: #ef4444;
+        }
+
+        .message.success {
+            background: #dcfce7;
+            color: #22c55e;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 480px) {
+            .auth-container {
+                border-radius: 1rem;
+            }
+
+            .auth-header {
+                padding: 1.5rem;
+            }
+
+            .auth-content {
+                padding: 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="auth-container">
+        <div class="auth-header">
+            <h1>MyChat</h1>
+        </div>
+        <div class="auth-content">
+            <div class="tab-buttons">
+                <button class="tab-btn active" data-tab="login">Login</button>
+                <button class="tab-btn" data-tab="signup">Sign Up</button>
+            </div>
+
+            <form id="loginForm" class="auth-form active">
+                <div class="input-group">
+                    <label for="loginUsername">Username</label>
+                    <input type="text" id="loginUsername" placeholder="Enter your username" required>
+                </div>
+                <div class="input-group">
+                    <label for="loginPasscode">Passcode</label>
+                    <input type="password" id="loginPasscode" placeholder="Enter 4-digit code" required>
+                </div>
+                <button type="submit" class="primary-btn">Login</button>
+            </form>
+
+            <form id="signupForm" class="auth-form">
+                <div class="input-group">
+                    <label for="signupUsername">Choose Username</label>
+                    <input type="text" id="signupUsername" placeholder="Create unique username" required>
+                </div>
+                <div class="input-group">
+                    <label for="signupPasscode">Create Passcode</label>
+                    <input type="password" id="signupPasscode" placeholder="4-digit passcode" required>
+                </div>
+                <div class="input-group">
+                    <label for="confirmPasscode">Confirm Passcode</label>
+                    <input type="password" id="confirmPasscode" placeholder="Re-enter passcode" required>
+                </div>
+                <button type="submit" class="primary-btn">Create Account</button>
+            </form>
+
+            <p id="authMessage" class="message"></p>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const loginForm = document.getElementById('loginForm');
+            const signupForm = document.getElementById('signupForm');
+            const authMessage = document.getElementById('authMessage');
+            const tabButtons = document.querySelectorAll('.tab-btn');
+
+            // Function to switch tabs
+            tabButtons.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    document.querySelectorAll('.tab-btn, .auth-form').forEach(el => el.classList.remove('active'));
+                    btn.classList.add('active');
+                    document.getElementById(btn.dataset.tab + 'Form').classList.add('active');
+                    authMessage.textContent = ''; // Clear any previous messages
+                    authMessage.className = 'message';
+                });
+            });
+
+            // Function to store user credentials
+            function storeCredentials(username, passcode) {
+                localStorage.setItem('users', JSON.stringify({
+                    ...JSON.parse(localStorage.getItem('users') || '{}'),
+                    [username]: passcode
+                }));
+            }
+
+            // Handle signup
+            signupForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const username = document.getElementById('signupUsername').value.trim();
+                const passcode = document.getElementById('signupPasscode').value.trim();
+                const confirmPasscode = document.getElementById('confirmPasscode').value.trim();
+
+                if (passcode !== confirmPasscode) {
+                    authMessage.textContent = 'Passcodes do not match!';
+                    authMessage.className = 'message error';
+                    return;
+                }
+
+                if (!username || !passcode) {
+                    authMessage.textContent = 'Please enter a username and passcode.';
+                    authMessage.className = 'message error';
+                    return;
+                }
+
+                const users = JSON.parse(localStorage.getItem('users') || '{}');
+                if (users[username]) {
+                    authMessage.textContent = 'Username already exists. Please choose another.';
+                    authMessage.className = 'message error';
+                    return;
+                }
+
+                storeCredentials(username, passcode);
+                authMessage.textContent = 'Account created successfully! Please log in.';
+                authMessage.className = 'message success';
+                setTimeout(() => {
+                    document.querySelector('.tab-btn[data-tab="login"]').click();
+                }, 1500);
+            });
+
+            // Handle login
+            loginForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const username = document.getElementById('loginUsername').value.trim();
+                const passcode = document.getElementById('loginPasscode').value.trim();
+
+                if (!username || !passcode) {
+                    authMessage.textContent = 'Please enter your username and passcode.';
+                    authMessage.className = 'message error';
+                    return;
+                }
+
+                const users = JSON.parse(localStorage.getItem('users') || '{}');
+                if (users[username] === passcode) {
+                    sessionStorage.setItem('username', username);
+                    sessionStorage.setItem('passcode', passcode);
+                    authMessage.textContent = 'Login successful! Redirecting to dashboard...';
+                    authMessage.className = 'message success';
+                    setTimeout(() => {
+                        window.location.href = 'dashboard.html';
+                    }, 1500);
+                } else {
+                    authMessage.textContent = 'Invalid username or passcode.';
+                    authMessage.className = 'message error';
+                }
+            });
+        });
+    </script>
+</body>
+</html>

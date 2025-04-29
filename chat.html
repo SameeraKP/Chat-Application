@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Chat App</title>
+  <link rel="stylesheet" href="styles.css"> <!-- if you have any CSS -->
+</head>
+<body>
+  <div id="chat-container">
+    <ul id="messages"></ul>
+    <form id="chat-form">
+      <input id="username" autocomplete="off" placeholder="Username" required />
+      <input id="message" autocomplete="off" placeholder="Type a message" required />
+      <button type="submit">Send</button>
+    </form>
+  </div>
+
+  <script src="/socket.io/socket.io.js"></script> <!-- Socket.IO client library -->
+  <script src="chat.js"></script> <!-- Your custom chat.js -->
+</body>
+</html>

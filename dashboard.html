@@ -1,0 +1,666 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Real-Time Chat Dashboard</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+<style>
+  :root {
+    --primary-color: #3498db;
+    --primary-dark: #2980b9;
+    --secondary-color: #2c3e50;
+    --secondary-light: #34495e;
+    --online-color: #2ecc71;
+    --offline-color: #95a5a6;
+    --background-color: #f5f5f5;
+    --message-sent: #3498db;
+    --message-received: #ecf0f1;
+    --text-color: #333;
+    --white: #ffffff;
+    --border-color: #eee;
+    --pending-color: #f39c12;
+  }
+
+  body {
+    font-family: 'Arial', sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: var(--background-color);
+    color: var(--text-color);
+  }
+
+  header {
+    background-color: var(--secondary-color);
+    color: var(--white);
+    padding: 1rem;
+    text-align: center;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+  }
+
+  #connection-status {
+    font-size: 0.8rem;
+    margin-top: 0.5rem;
+  }
+
+  .navbar {
+    background-color: var(--secondary-light);
+    display: flex;
+    justify-content: center;
+    padding: 0.5rem;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+  }
+
+  .navbar button {
+    background-color: transparent;
+    color: var(--white);
+    border: none;
+    padding: 0.75rem 1.5rem;
+    cursor: pointer;
+    font-size: 1rem;
+    border-radius: 4px;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .navbar button:hover {
+    background-color: rgba(255,255,255,0.1);
+  }
+
+  .container {
+    display: flex;
+    max-width: 1200px;
+    margin: 1rem auto;
+    background-color: var(--white);
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    overflow: hidden;
+    height: calc(100vh - 180px);
+  }
+
+  .user-list {
+    width: 250px;
+    border-right: 1px solid var(--border-color);
+    display: flex;
+    flex-direction: column;
+  }
+
+  .user-list-header {
+    padding: 1rem;
+    border-bottom: 1px solid var(--border-color);
+    font-weight: bold;
+    background-color: var(--white);
+  }
+
+  .user-list-content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 0.5rem;
+  }
+
+  .user {
+    padding: 0.75rem;
+    margin-bottom: 0.5rem;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .user:hover {
+    background-color: rgba(0,0,0,0.05);
+  }
+
+  .user.online {
+    color: var(--online-color);
+    font-weight: bold;
+  }
+
+  .user.offline {
+    color: var(--offline-color);
+  }
+
+  .user-status {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    margin-right: 0.5rem;
+  }
+
+  .user.online .user-status {
+    background-color: var(--online-color);
+  }
+
+  .user.offline .user-status {
+    background-color: var(--offline-color);
+  }
+
+  .chat-window {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .chat-header {
+    padding: 1rem;
+    border-bottom: 1px solid var(--border-color);
+    font-weight: bold;
+    background-color: var(--white);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .chat-messages {
+    flex: 1;
+    padding: 1rem;
+    overflow-y: auto;
+    background-color: rgba(245,245,245,0.5);
+  }
+
+  .message {
+    margin-bottom: 0.75rem;
+    padding: 0.75rem 1rem;
+    border-radius: 18px;
+    max-width: 70%;
+    word-wrap: break-word;
+    position: relative;
+    animation: fadeIn 0.3s ease;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .message.sent {
+    background-color: var(--message-sent);
+    color: var(--white);
+    margin-left: auto;
+    border-bottom-right-radius: 4px;
+  }
+
+  .message.received {
+    background-color: var(--message-received);
+    margin-right: auto;
+    border-bottom-left-radius: 4px;
+  }
+
+  .message-time {
+    font-size: 0.7rem;
+    opacity: 0.7;
+    margin-top: 0.25rem;
+    display: block;
+    text-align: right;
+  }
+
+  .user-input {
+    display: flex;
+    padding: 1rem;
+    border-top: 1px solid var(--border-color);
+    background-color: var(--white);
+  }
+
+  #message-input {
+    flex: 1;
+    padding: 0.75rem;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    font-size: 1rem;
+    outline: none;
+  }
+
+  #send-button {
+    margin-left: 0.5rem;
+    padding: 0.75rem 1.5rem;
+    background-color: var(--primary-color);
+    color: var(--white);
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 1rem;
+  }
+
+  #send-button:hover {
+    background-color: var(--primary-dark);
+  }
+
+  /* Additional styles for sections and chat history */
+  .section {
+    display: none;
+    width: 100%;
+    height: 100%;
+    flex-direction: column;
+  }
+  .active-section {
+    display: flex;
+  }
+  #chatHistory {
+    padding: 1rem;
+    overflow-y: auto;
+    flex: 1;
+  }
+  #chatHistory div {
+    padding: 0.75rem;
+    margin-bottom: 0.5rem;
+    border-radius: 4px;
+    cursor: pointer;
+    border-bottom: 1px solid var(--border-color);
+  }
+  #chatHistory div:hover {
+    background-color: rgba(0,0,0,0.05);
+  }
+  .empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    color: var(--offline-color);
+    text-align: center;
+    padding: 2rem;
+  }
+  .empty-state i {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+  }
+
+  /* Notification style */
+  .notification {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background-color: var(--secondary-color);
+    color: white;
+    padding: 0.75rem 1.5rem;
+    border-radius: 4px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    z-index: 1000;
+    transform: translateX(200%);
+    transition: transform 0.3s ease;
+  }
+  .notification.show {
+    transform: translateX(0);
+  }
+  .unread-badge {
+    background-color: var(--primary-color);
+    color: white;
+    border-radius: 50%;
+    width: 20px;
+    height: 20px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.7rem;
+    margin-left: 0.5rem;
+  }
+</style>
+</head>
+<body>
+<header>
+  <h1>Real-Time Chat Dashboard</h1>
+  <div id="connection-status" style="font-size: 0.8rem; margin-top: 0.5rem;">
+    <i class="fas fa-circle" style="color: var(--online-color);"></i> <span id="username-display">Guest</span>
+  </div>
+</header>
+<div class="navbar">
+  <button onclick="showSection('newChat')"><i class="fas fa-comment"></i> New Chat</button>
+  <button onclick="showSection('chatHistory')"><i class="fas fa-history"></i> Chat History</button>
+  <button onclick="showSection('profile')"><i class="fas fa-user"></i> Profile</button>
+  <button onclick="logout()"><i class="fas fa-sign-out-alt"></i> Logout</button>
+</div>
+<div class="container">
+  <div class="user-list">
+    <div class="user-list-header">Online Users</div>
+    <div class="user-list-content" id="user-list"></div>
+  </div>
+
+  <!-- Chat Section -->
+  <div class="section active-section" id="newChat">
+    <div class="chat-header" id="chat-header">
+      <span id="current-chat-partner">Select a user to start chatting</span>
+      <div class="typing-indicator" id="typing-indicator"></div>
+    </div>
+    <div class="chat-messages" id="chat-messages">
+      <div class="empty-state">
+        <i class="fas fa-comments"></i>
+        <h3>No conversation selected</h3>
+        <p>Select a user from the list to start chatting</p>
+      </div>
+    </div>
+    <div class="user-input">
+      <input type="text" id="message-input" placeholder="Type a message..." autocomplete="off" />
+      <button id="send-button">Send</button>
+    </div>
+  </div>
+
+  <!-- Chat History -->
+  <div class="section" id="chatHistory">
+    <div class="chat-header">Chat History</div>
+    <div id="chatHistoryList"></div>
+  </div>
+
+  <!-- Profile -->
+  <div class="section" id="profile">
+    <div class="chat-header">Profile</div>
+    <div style="padding: 1rem;">
+      <p><strong>Username:</strong> <span id="profileUsername"></span></p>
+      <p><strong>Status:</strong> <span id="profileStatus">Online</span></p>
+      <p><strong>Connection ID:</strong> <span id="connectionId"></span></p>
+      <button onclick="changeUsername()" style="margin-top: 1rem;">
+        <i class="fas fa-edit"></i> Change Username
+      </button>
+    </div>
+  </div>
+</div>
+
+<div class="notification" id="notification"></div>
+
+<script src="/socket.io/socket.io.js"></script>
+<script>
+  const socket = io();
+  let selectedUser = null;
+  let username = sessionStorage.getItem('username') || '';
+  let isTyping = false;
+  let typingTimeout;
+  let unreadMessages = {};
+  let userList = [];
+  const chatHistory = {};
+
+  function initApp() {
+    if (!username) {
+      askForUsername();
+    } else {
+      setUsernameUI(username);
+      authenticateUser();
+    }
+    setupEventListeners();
+    setupSocketEvents();
+    updateConnectionStatus();
+  }
+
+  function askForUsername() {
+    const storedUsername = prompt("Please enter your username:");
+    if (storedUsername && storedUsername.trim()) {
+      username = storedUsername.trim();
+      sessionStorage.setItem('username', username);
+      setUsernameUI(username);
+      authenticateUser();
+    } else {
+      alert('Username is required to continue.');
+      askForUsername();
+    }
+  }
+
+  function setUsernameUI(name) {
+    document.getElementById('profileUsername').textContent = name;
+    document.getElementById('username-display').textContent = name;
+  }
+
+  function authenticateUser() {
+    socket.emit('authenticate', username);
+    socket.emit('requestUserList');
+  }
+
+  function updateConnectionStatus() {
+    const statusEl = document.getElementById('connection-status');
+    if (socket.connected) {
+      statusEl.querySelector('i').style.color = 'var(--online-color)';
+    } else {
+      statusEl.querySelector('i').style.color = 'var(--offline-color)';
+    }
+  }
+
+  function setupEventListeners() {
+    document.getElementById('send-button').addEventListener('click', sendMessage);
+    document.getElementById('message-input').addEventListener('keydown', handleInput);
+
+    socket.on('connect', () => {
+      updateConnectionStatus();
+      if (username) authenticateUser();
+      showNotification('Connected to server');
+    });
+
+    socket.on('disconnect', () => {
+      updateConnectionStatus();
+      showNotification('Disconnected from server');
+    });
+
+    socket.on('reconnect', () => {
+      updateConnectionStatus();
+      showNotification('Reconnected to server');
+      if (username) authenticateUser();
+    });
+  }
+
+  function handleInput(e) {
+    if (e.key === 'Enter') {
+      sendMessage();
+    } else {
+      handleTyping();
+    }
+  }
+
+  function handleTyping() {
+    if (!isTyping && selectedUser) {
+      isTyping = true;
+      socket.emit('typing', { to: selectedUser, isTyping: true });
+    }
+    clearTimeout(typingTimeout);
+    typingTimeout = setTimeout(() => {
+      isTyping = false;
+      if (selectedUser) {
+        socket.emit('typing', { to: selectedUser, isTyping: false });
+      }
+    }, 1000);
+  }
+
+  function setupSocketEvents() {
+    socket.on('userList', users => {
+      userList = users.filter(user => user.username !== username);
+      updateUserList();
+    });
+
+    socket.on('userConnected', newUser => {
+      if (newUser !== username && !userList.some(u => u.username === newUser)) {
+        userList.push({ username: newUser, online: true });
+        updateUserList();
+        showNotification(`${newUser} connected`);
+      }
+    });
+
+    socket.on('userDisconnected', disconnectedUser => {
+      if (disconnectedUser !== username) {
+        userList = userList.filter(u => u.username !== disconnectedUser);
+        updateUserList();
+        showNotification(`${disconnectedUser} disconnected`);
+      }
+    });
+
+    socket.on('privateMessage', handleIncomingMessage);
+
+    socket.on('typing', data => {
+      if (data.from === selectedUser) {
+        const indicator = document.getElementById('typing-indicator');
+        indicator.textContent = data.isTyping ? `${data.from} is typing...` : '';
+        indicator.classList.toggle('active', !!data.isTyping);
+      }
+    });
+
+    socket.on('connectionId', id => {
+      document.getElementById('connectionId').textContent = id;
+    });
+  }
+
+  function updateUserList() {
+    const userListDiv = document.getElementById('user-list');
+    if (userList.length === 0) {
+      userListDiv.innerHTML =
+        '<div class="empty-state"><i class="fas fa-user-friends"></i><p>No other users online</p></div>';
+      return;
+    }
+    userListDiv.innerHTML = userList
+      .map(
+        (user) => `
+        <div class="user ${user.online ? 'online' : 'offline'}" onclick="selectUser('${user.username}')">
+          <span class="user-status"></span>
+          ${user.username}
+          ${unreadMessages[user.username] ? `<span class="unread-badge">${unreadMessages[user.username]}</span>` : ''}
+        </div>`
+      )
+      .join('');
+  }
+
+  window.selectUser = function(user) {
+    selectedUser = user;
+    document.getElementById('current-chat-partner').textContent = user;
+    loadChatHistory(user);
+    clearUnread(user);
+    document.getElementById('typing-indicator').textContent = '';
+    document.getElementById('message-input').focus();
+  }
+
+  function loadChatHistory(user) {
+    const chatMessages = document.getElementById('chat-messages');
+    chatMessages.innerHTML = '';
+
+    if (!chatHistory[user] || chatHistory[user].length === 0) {
+      chatMessages.innerHTML = `
+        <div class="empty-state">
+          <i class="fas fa-comments"></i>
+          <h3>No messages with ${user}</h3>
+          <p>Start the conversation by sending a message.</p>
+        </div>`;
+      return;
+    }
+
+    chatHistory[user].forEach((msg) => {
+      appendMessage(msg);
+    });
+
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+  }
+
+  function appendMessage(msg) {
+    const chatMessages = document.getElementById('chat-messages');
+    const messageDiv = document.createElement('div');
+    messageDiv.classList.add('message');
+    messageDiv.classList.add(msg.from === username ? 'sent' : 'received');
+    messageDiv.innerHTML = `
+      <div class="message-header">
+        <span class="message-sender">${msg.from}</span>
+        <span class="message-time">${new Date(msg.timestamp).toLocaleTimeString()}</span>
+      </div>
+      <div class="message-text">${escapeHtml(msg.message)}</div>
+    `;
+    chatMessages.appendChild(messageDiv);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+  }
+
+  function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+  }
+
+  function sendMessage() {
+    const input = document.getElementById('message-input');
+    const text = input.value.trim();
+    if (!text || !selectedUser) return;
+
+    const msgObj = {
+      to: selectedUser,
+      message: text,
+    };
+
+    if (!chatHistory[selectedUser]) chatHistory[selectedUser] = [];
+    chatHistory[selectedUser].push({
+      message: text,
+      from: username,
+      timestamp: new Date().toISOString(),
+    });
+    appendMessage({
+      message: text,
+      from: username,
+      timestamp: new Date().toISOString(),
+    });
+
+    socket.emit('privateMessage', msgObj);
+    input.value = '';
+    input.focus();
+  }
+
+  function handleIncomingMessage(msg) {
+    if (!msg.from || !msg.message) return;
+
+    if (!chatHistory[msg.from]) chatHistory[msg.from] = [];
+    chatHistory[msg.from].push(msg);
+
+    if (selectedUser === msg.from) {
+      appendMessage(msg);
+    } else {
+      unreadMessages[msg.from] = (unreadMessages[msg.from] || 0) + 1;
+      updateUserList();
+      showNotification(`New message from ${msg.from}`);
+    }
+  }
+
+  function clearUnread(user) {
+    if (unreadMessages[user]) {
+      delete unreadMessages[user];
+      updateUserList();
+    }
+  }
+
+  function showNotification(text) {
+    const notification = document.getElementById('notification');
+    notification.textContent = text;
+    notification.classList.add('show');
+    setTimeout(() => {
+      notification.classList.remove('show');
+    }, 3000);
+  }
+
+  window.showSection = function(sectionId) {
+    document.querySelectorAll('.section').forEach((section) => {
+      section.classList.remove('active-section');
+    });
+    document.getElementById(sectionId).classList.add('active-section');
+  }
+
+  window.logout = function() {
+    // Instead of asking for username again, redirect to index.html
+    sessionStorage.removeItem('username');
+    window.location.href = 'index.html'; // redirect to your index page
+  }
+
+  window.changeUsername = function() {
+    const newUsername = prompt('Enter new username:', username);
+    if (newUsername && newUsername.trim() && newUsername.trim() !== username) {
+      username = newUsername.trim();
+      sessionStorage.setItem('username', username);
+      setUsernameUI(username);
+      authenticateUser();
+      selectedUser = null;
+      Object.keys(chatHistory).forEach(user => delete chatHistory[user]);
+      document.getElementById('chat-messages').innerHTML = `
+        <div class="empty-state">
+          <i class="fas fa-comments"></i>
+          <h3>No conversation selected</h3>
+          <p>Select a user from the list to start chatting</p>
+        </div>`;
+      document.getElementById('current-chat-partner').textContent = 'Select a user to start chatting';
+      updateUserList();
+    }
+  }
+
+  initApp();
+</script>
+</body>
+</html>

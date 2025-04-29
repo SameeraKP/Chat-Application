@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Chat History</title>
+    <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+    <div class="container">
+        <h1>Chat History</h1>
+        <div id="historyMessages" class="messages"></div>
+        <button id="backBtn">Back to Chat</button>
+    </div>
+
+    <script>
+        const historyMessages = document.getElementById('historyMessages');
+        const backBtn = document.getElementById('backBtn');
+
+        const username = sessionStorage.getItem('username');
+        const passcode = sessionStorage.getItem('passcode');
+
+        if (!username || !passcode) {
+            alert('Unauthorized access. Redirecting to login.');
+            window.location.href = '/';
+        }
+
+        // Fetch all messages from server via API (you can create an API endpoint)
+        fetch('/api/messages')
+            .then(res => res.json())
+            .then(messages => {
+                if (messages.length === 0) {
+                    historyMessages.innerHTML = '<p>No chat history available.</p>';
+                    return;
+                }
+
+                messages.forEach(({ username: user, message, timestamp }) => {
+                    const time = new Date(timestamp).toLocaleString();
+                    historyMessages.innerHTML += `<p><strong>${user}</strong> [${time}]: ${message}</p>`;
+                });
+            })
+            .catch(() => {
+                historyMessages.innerHTML = '<p>Error loading chat history.</p>';
+            });
+
+        backBtn.addEventListener('click', () => {
+            window.location.href = 'chat.html';
+        });
+    </script>
+</body>
+</html>

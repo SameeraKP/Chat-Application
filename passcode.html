@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Passcode Verification</title>
+    <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+    <div class="container">
+        <h1>Passcode Verification</h1>
+        <p>Please enter your passcode to enter the chat</p>
+
+        <input type="password" id="passcodeInput" placeholder="Enter passcode" />
+        <button id="verifyBtn">Verify</button>
+
+        <p id="message" style="color: yellow;"></p>
+    </div>
+
+    <script>
+        const verifyBtn = document.getElementById('verifyBtn');
+        const messageP = document.getElementById('message');
+
+        const storedPasscode = sessionStorage.getItem('passcode');
+        const username = sessionStorage.getItem('username');
+
+        if (!username || !storedPasscode) {
+            alert('Unauthorized access. Redirecting to login.');
+            window.location.href = '/';
+        }
+
+        verifyBtn.addEventListener('click', () => {
+            const enteredPasscode = document.getElementById('passcodeInput').value.trim();
+
+            if (enteredPasscode === storedPasscode) {
+                window.location.href = 'chat.html';
+            } else {
+                messageP.textContent = 'Incorrect passcode. Try again.';
+            }
+        });
+    </script>
+</body>
+</html>
